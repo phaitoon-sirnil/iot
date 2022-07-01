@@ -27,8 +27,6 @@ const char *mqttpass = "";//“*********”;
 #define DHTPIN D4              // Define sensor pin
 #define SOIL_SENSOR A0  /* Connect Soil moisture analog sensor pin to A0 of NodeMCU */
 
-#define ALIAS "buu1234chan"
-
 int timer = 0, timer2 = 0;
 unsigned long t_dht,t_soil, t_solar;;
 char str[32];
