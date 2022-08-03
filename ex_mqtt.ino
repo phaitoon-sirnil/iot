@@ -4,8 +4,8 @@
 
 #define time_duration 10000
 
-const char *phone = "buu-01";
-const char *house = "house1";
+const char *phone = "YOUR_ID_NUMBER";
+const char *house = "YOUR_HOUSE_NUMBER";
 
 //const char *ssid = "Perfact land 2.4G_EXT";//“********”; // cannot be longer than 32 characters!
 //const char *password = "2499265MJ";//“*********”;
