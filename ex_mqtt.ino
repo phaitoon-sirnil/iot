@@ -11,8 +11,8 @@ const char *house = "YOUR_HOUSE_NUMBER";
 //const char *password = "2499265MJ";//“*********”;
 //const char *ssid = "TP-Link_6EA2";//“********”; // cannot be longer than 32 characters!
 //const char *password = "26122144";//“*********”;
-const char *ssid = "Redmi_9A";//“********”; // cannot be longer than 32 characters!
-const char *password = "0813470881";//“*********”;
+const char *ssid = "YOUR_SSID";//“********”; // cannot be longer than 32 characters!
+const char *password = "YOUR_PASSWORD";//“*********”;
 
 const char *mqtt_server = "broker.hivemq.com";//“m14.cloudmqtt.com”;
 const int mqtt_port = 1883;//19405;
