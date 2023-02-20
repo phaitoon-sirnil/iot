@@ -1,4 +1,3 @@
-
 // Including the ESP8266 WiFi library
 #include <ESP8266WiFi.h>
 #include "DHT.h"
@@ -16,9 +15,7 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
-  dht.begin();
-
-  
+  dht.begin();  
 }
 
 // runs over and over again
@@ -31,11 +28,9 @@ void loop() {
   
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-  
+      Serial.println("Failed to read from DHT sensor!");  
     }
-    else {
-     
+    else {     
       Serial.print("Humidity: ");
       Serial.print(h);
       Serial.print(" %\t Temperature: ");
