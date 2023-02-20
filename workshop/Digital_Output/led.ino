@@ -6,7 +6,7 @@ void setup(){
 
 void loop(){
   digitalWrite(LED,HIGH); // Pin D0 is HIGH
-  delay(250);
+  delay(1000);
   digitalWrite(LED,LOW); // Pin D0 is LOW
   delay(1000); //delay for one second.
 }
