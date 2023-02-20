@@ -1,5 +1,6 @@
+//Uplink_Downlink.ino
 //Reading dht & sending to mqtt broker
-// Including the ESP8266 WiFi library
+
 #include <ESP8266WiFi.h>
 #include "DHT.h"
 #include<PubSubClient.h>
@@ -24,12 +25,16 @@ PubSubClient client(mqtt_server, mqtt_port, espclient);
 DHT dht(DHTPin, DHTTYPE);
 unsigned long t_dht;
 
+#define LIGHT D0
+
 
 // only runs once on boot
 void setup() {
   // Initializing serial port for debugging purposes
   Serial.begin(115200);
+  pinMode(LIGHT,OUTPUT);
   delay(10);
+  
 
   dht.begin();  
 
@@ -46,44 +51,48 @@ void loop() {
       connect_mqtt();
     }
     client.loop();
+
+    if(millis()-t_dht >= 1000){
+      // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+      float humid = dht.readHumidity();
+      // Read temperature as Celsius (the default)
+      float temp = dht.readTemperature();
+    
+      // Check if any reads failed and exit early (to try again).
+      if (isnan(humid) || isnan(temp)) {
+        Serial.println("Failed to read from DHT sensor!");  
+      }
+      else {     
+        Serial.print("Humidity: ");
+        Serial.print(humid);
+        Serial.print(" %\t Temperature: ");
+        Serial.print(temp);
+        Serial.println(" *C ");    
   
-    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    float humid = dht.readHumidity();
-    // Read temperature as Celsius (the default)
-    float temp = dht.readTemperature();
+        String data;
+        char str[32];
+        char pub_topic[32];
   
-    // Check if any reads failed and exit early (to try again).
-    if (isnan(humid) || isnan(temp)) {
-      Serial.println("Failed to read from DHT sensor!");  
+        data = String(temp);
+        data.toCharArray(str,data.length()+1);
+        data = String("/")+String(phone)+String("/")+String(house)+String("/status/temp");
+        data.toCharArray(pub_topic,data.length()+1);
+        client.publish(pub_topic,str);
+            
+        data = String(humid);
+        data.toCharArray(str,data.length()+1);
+        data = String("/")+String(phone)+String("/")+String(house)+String("/status/humid");
+        data.toCharArray(pub_topic,data.length()+1);
+        client.publish(pub_topic,str);
+      }
+
+      t_dht = millis();  
     }
-    else {     
-      Serial.print("Humidity: ");
-      Serial.print(humid);
-      Serial.print(" %\t Temperature: ");
-      Serial.print(temp);
-      Serial.println(" *C ");    
-
-      String data;
-      char str[32];
-      char pub_topic[32];
-
-      data = String(temp);
-      data.toCharArray(str,data.length()+1);
-      data = String("/")+String(phone)+String("/")+String(house)+String("/status/temp");
-      data.toCharArray(pub_topic,data.length()+1);
-      client.publish(pub_topic,str);
-          
-      data = String(humid);
-      data.toCharArray(str,data.length()+1);
-      data = String("/")+String(phone)+String("/")+String(house)+String("/status/humid");
-      data.toCharArray(pub_topic,data.length()+1);
-      client.publish(pub_topic,str);
-    }
-
-    delay(2000);  
+    
+    //delay(2000);  
 }
 
-oid callback(String topic,byte* payload,unsigned int length1){ 
+void callback(String topic,byte* payload,unsigned int length1){ 
   Serial.println("\nMessage is comming...");
   Serial.println(String("Topic: ")+String(topic));
   
