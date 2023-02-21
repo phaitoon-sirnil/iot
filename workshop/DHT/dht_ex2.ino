@@ -4,16 +4,16 @@
 #include "DHT.h"
 #include<PubSubClient.h>
 
-const char* ssid     = "YOUR_SSID";
-const char* password = "YOUR_PASSWORD";
+const char* ssid     = "OPPO_A31";
+const char* password = "0813470881";
 
 const char *mqtt_server = "broker.hivemq.com";
 const int mqtt_port = 1883;
 const char *mqttuser = "";
 const char *mqttpass = "";
 
-const char *phone = "YOUR_ID_NUMBER";
-const char *house = "YOUR_HOUSE_NUMBER";
+const char *phone = "0813470881";
+const char *house = "house01";
 
 WiFiClient espclient;
 PubSubClient client(mqtt_server, mqtt_port, espclient);
@@ -32,6 +32,17 @@ void setup() {
   delay(10);
 
   dht.begin();  
+
+  Serial.println("WiFi is connecting...");
+   WiFi.begin(ssid, password);
+   while (WiFi.status() != WL_CONNECTED){
+      delay(250);
+      Serial.print(".");
+   }
+
+   Serial.println("\nWiFi is connected");  
+   Serial.print("IP address: ");
+   Serial.println(WiFi.localIP());
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
