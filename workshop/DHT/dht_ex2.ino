@@ -1,6 +1,5 @@
 //Reading dht & sending to mqtt broker
-//Reading dht & sending to mqtt broker
-// Including the ESP8266 WiFi library
+
 #include <ESP8266WiFi.h>
 #include "DHT.h"
 #include<PubSubClient.h>
