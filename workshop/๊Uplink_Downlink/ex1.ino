@@ -82,7 +82,7 @@ void loop() {
     delay(2000);  
 }
 
-oid callback(String topic,byte* payload,unsigned int length1){ 
+void callback(String topic,byte* payload,unsigned int length1){ 
   Serial.println("\nMessage is comming...");
   Serial.println(String("Topic: ")+String(topic));
   
