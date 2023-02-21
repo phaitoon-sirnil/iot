@@ -1,5 +1,5 @@
 //Reading dht & sending to mqtt broker
-
+// Including the ESP8266 WiFi library
 #include <ESP8266WiFi.h>
 #include "DHT.h"
 #include<PubSubClient.h>
@@ -60,9 +60,9 @@ void loop() {
     client.loop();
   
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    float humid = dht.readHumidity();
+    float humid = 89;//dht.readHumidity();
     // Read temperature as Celsius (the default)
-    float temp = dht.readTemperature();
+    float temp = 33;//dht.readTemperature();
   
     // Check if any reads failed and exit early (to try again).
     if (isnan(humid) || isnan(temp)) {
