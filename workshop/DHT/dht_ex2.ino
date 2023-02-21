@@ -1,19 +1,20 @@
 //Reading dht & sending to mqtt broker
+//Reading dht & sending to mqtt broker
 // Including the ESP8266 WiFi library
 #include <ESP8266WiFi.h>
 #include "DHT.h"
 #include<PubSubClient.h>
 
-const char* ssid     = "YOUR_SSID";
-const char* password = "YOUR_PASSWORD";
+const char* ssid     = "OPPO_A31";
+const char* password = "0813470881";
 
 const char *mqtt_server = "broker.hivemq.com";
 const int mqtt_port = 1883;
 const char *mqttuser = "";
 const char *mqttpass = "";
 
-const char *phone = "YOUR_PHONE";
-const char *house = "YOUR_HOUSE_ID";
+const char *phone = "0813470881";
+const char *house = "house01";
 
 WiFiClient espclient;
 PubSubClient client(mqtt_server, mqtt_port, espclient);
@@ -23,6 +24,8 @@ PubSubClient client(mqtt_server, mqtt_port, espclient);
 #define DHTPin D4
 // Initialize DHT sensor.
 DHT dht(DHTPin, DHTTYPE);
+char str[32];
+String data="";
 
 
 // only runs once on boot
@@ -73,21 +76,21 @@ void loop() {
       Serial.print(temp);
       Serial.println(" *C ");    
 
-      String data;
-      char str[32];
       char pub_topic[32];
 
-      data = String(temp);
-      data.toCharArray(str,data.length()+1);
-      data = String("/")+String(phone)+String("/")+String(house)+String("/status/temp");
-      data.toCharArray(pub_topic,data.length()+1);
-      client.publish(pub_topic,str);
+          data = String(temp);
+          data.toCharArray(str,data.length()+1);
+          data = String("/")+String(phone)+String("/")+String(house)+String("/status/temp");
+          data.toCharArray(pub_topic,data.length()+1);
+          client.publish(pub_topic,str);
+          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
           
-      data = String(humid);
-      data.toCharArray(str,data.length()+1);
-      data = String("/")+String(phone)+String("/")+String(house)+String("/status/humid");
-      data.toCharArray(pub_topic,data.length()+1);
-      client.publish(pub_topic,str);
+          data = String(humid);
+          data.toCharArray(str,data.length()+1);
+          data = String("/")+String(phone)+String("/")+String(house)+String("/status/humid");
+          data.toCharArray(pub_topic,data.length()+1);
+          client.publish(pub_topic,str);
+          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
     }
 
     delay(2000);  
