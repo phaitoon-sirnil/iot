@@ -4,16 +4,16 @@
 #include "DHT.h"
 #include<PubSubClient.h>
 
-const char* ssid     = "OPPO_A31";
-const char* password = "0813470881";
+const char* ssid     = "YOUR_SSID";
+const char* password = "YOUR_PASSWORD";
 
 const char *mqtt_server = "broker.hivemq.com";
 const int mqtt_port = 1883;
 const char *mqttuser = "";
 const char *mqttpass = "";
 
-const char *phone = "0813470881";
-const char *house = "house01";
+const char *phone = "YOUR_PHONE";
+const char *house = "YOUR_HOUSE_ID";
 
 WiFiClient espclient;
 PubSubClient client(mqtt_server, mqtt_port, espclient);
