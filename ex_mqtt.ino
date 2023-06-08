@@ -1,16 +1,11 @@
 #include <DHT.h>  //Adafruit DHT22 1.3.4 + Adafuit Unified Sensor 1.0.3
 #include <ESP8266WiFi.h>
-#include<PubSubClient.h>
-
-#define time_duration 10000
+#include<PubSubClient.h> //by Nick O'Leary Version 2.8.0
+#include "Simpletimer.h" // by Natan Lisowski version 2.1.7
 
 const char *phone = "YOUR_ID_NUMBER";
 const char *house = "YOUR_HOUSE_NUMBER";
 
-//const char *ssid = "Perfact land 2.4G_EXT";//“********”; // cannot be longer than 32 characters!
-//const char *password = "2499265MJ";//“*********”;
-//const char *ssid = "TP-Link_6EA2";//“********”; // cannot be longer than 32 characters!
-//const char *password = "26122144";//“*********”;
 const char *ssid = "YOUR_SSID";//“********”; // cannot be longer than 32 characters!
 const char *password = "YOUR_PASSWORD";//“*********”;
 
@@ -25,21 +20,10 @@ const char *mqttpass = "";//“*********”;
 #define SPRAY D3 //D1
 #define DHTTYPE DHT22          //Define sensor type
 #define DHTPIN D4              // Define sensor pin
-#define SOIL_SENSOR A0  /* Connect Soil moisture analog sensor pin to A0 of NodeMCU */
+#define SOIL_SENSOR A0
 
-int timer = 0, timer2 = 0;
-unsigned long t_dht,t_soil, t_solar;;
 char str[32];
 String data="";
- 
-bool flag = true;
-
-int state = 0;
-int stateOutdated = 0;
-char buff[16];
-
-unsigned long oldTime;
-
 
 DHT dht(DHTPIN, DHTTYPE, 15);   //Initialize DHT sensor 
 
@@ -48,6 +32,7 @@ float temp = 0;
 
 WiFiClient espclient;
 PubSubClient client(mqtt_server, mqtt_port, espclient);
+Simpletimer timer1,timer2;
 
 void callback(String topic,byte* payload,unsigned int length1){ 
   Serial.print("message arrived ==> [");
@@ -145,9 +130,69 @@ void reconnect(){
      }
   }
 }
+
+void readDHT(){
+  char pub_topic[32];
+  humid = dht.readHumidity(); //อ่านค่าความชื้นจาก DHT
+  temp = dht.readTemperature(); //อ่านค่าอุณหภูมิจาก DHT
+
+  if (isnan(humid) || isnan(temp)) { //ตรวจสอบค่าที่อ่านได้ว่าเป็น NaN หรือไม่
+     data = String("/")+String(phone)+String("/")+String(phone)+String("/state/error");
+     data.toCharArray(pub_topic,data.length()+1);
+     Serial.println("Failed to read from DHT sensor!");
+     client.publish(pub_topic,"Failed to read from DHT!!!");
+     delay(500);
+     //return;
+  }else{ 
+     String data = String(humid)+","+String(temp);
+     data.toCharArray(str,data.length()+1);
+     data = String("/")+String(phone)+String("/")+String(house)+String("/state/dht");
+     data.toCharArray(pub_topic,data.length()+1);
+     client.publish(pub_topic,str);
+     Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
+          
+     data = String(temp);
+     data.toCharArray(str,data.length()+1);
+//   client.publish("/buu/iot/diy/state/dht",str); //ส่งข้อมูล ความชื้น และ อุณหภูมิ ไปยัง topic ชื่อ /dht
+     data = String("/")+String(phone)+String("/")+String(house)+String("/state/temp");
+     data.toCharArray(pub_topic,data.length()+1);
+     client.publish(pub_topic,str);
+     Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
+          
+     data = String(humid);
+     data.toCharArray(str,data.length()+1);
+     data = String("/")+String(phone)+String("/")+String(house)+String("/state/humid");
+     data.toCharArray(pub_topic,data.length()+1);
+     client.publish(pub_topic,str);
+     Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
+  }
+}
+
+void readMoisture(){
+   char pub_topic[32];
+   float moisture_percentage,moisture;
+   moisture = analogRead(SOIL_SENSOR);
+   //moisture_percentage = (100.00 - (moisture * 100.00));
+   moisture_percentage = map(moisture,0,1023,0,100);
+   if (isnan(moisture_percentage)) { //ตรวจสอบค่าที่อ่านได้ว่าเป็น NaN หรือไม่
+//    Serial.println("Failed to read from Moisture sensor!");
+      data = String("/")+String(phone)+String("/")+String(house)+String("/state/error");
+      data.toCharArray(pub_topic,data.length()+1);
+      client.publish(pub_topic,"Failed to read from SOIL!!!");
+      Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print("Failed to read from SOIL!!!)");
+      delay(500);
+   }else{
+      Serial.print("Moisture value:= ");Serial.println(100-moisture_percentage);
+      String data = String(100-moisture_percentage);
+      data.toCharArray(str,data.length()+1);
+      data = String("/")+String(phone)+String("/")+String(house)+String("/state/moisture");
+      data.toCharArray(pub_topic,data.length()+1);
+      client.publish(pub_topic,str);
+//    client.publish("/buu/iot/diy/state/soil",str); //ส่งข้อมูล ความชื้น และ อุณหภูมิ ไปยัง topic ชื่อ /dht
+      Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
+    }
+}
 void setup(){
-
-
     dht.begin();
     
     Serial.begin(115200);
@@ -172,10 +217,11 @@ void setup(){
     client.setCallback(callback);
     delay(1000);
     reconnect();
-    t_dht = millis();
-    t_soil = millis()+5000;
-    t_solar = millis()+8000;
-}
+
+    timer1.register_callback(readDHT);
+    timer2.register_callback(readMoisture);
+
+ }
 
 void loop(){
     char pub_topic[32];
@@ -184,83 +230,7 @@ void loop(){
     }
     client.loop();
 
-    if (millis()-t_dht >= time_duration) {
-        humid = dht.readHumidity(); //อ่านค่าความชื้นจาก DHT
-        temp = dht.readTemperature(); //อ่านค่าอุณหภูมิจาก DHT
+    timer1.run(10000);
+    timer2.run(12000);
 
-        if (isnan(humid) || isnan(temp)) { //ตรวจสอบค่าที่อ่านได้ว่าเป็น NaN หรือไม่
-          data = String("/")+String(phone)+String("/")+String(phone)+String("/state/error");
-          data.toCharArray(pub_topic,data.length()+1);
-          Serial.println("Failed to read from DHT sensor!");
-//          client.publish("/buu/iot/diy/state/dht/error","Failed to read from DHT!!!");
-          client.publish(pub_topic,"Failed to read from DHT!!!");
-          delay(500);
-          //return;
-        }else{ 
-
-          String data = String(humid)+","+String(temp);
-          data.toCharArray(str,data.length()+1);
-          data = String("/")+String(phone)+String("/")+String(house)+String("/state/dht");
-          data.toCharArray(pub_topic,data.length()+1);
-          client.publish(pub_topic,str);
-          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
-          
-          data = String(temp);
-          data.toCharArray(str,data.length()+1);
-//              client.publish("/buu/iot/diy/state/dht",str); //ส่งข้อมูล ความชื้น และ อุณหภูมิ ไปยัง topic ชื่อ /dht
-          data = String("/")+String(phone)+String("/")+String(house)+String("/state/temp");
-          data.toCharArray(pub_topic,data.length()+1);
-          client.publish(pub_topic,str);
-//          client.publish("/buu/iot/diy/state/temp",str);
-          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
-          
-          data = String(humid);
-          data.toCharArray(str,data.length()+1);
-          data = String("/")+String(phone)+String("/")+String(house)+String("/state/humid");
-          data.toCharArray(pub_topic,data.length()+1);
-          client.publish(pub_topic,str);
-//          client.publish("/buu/iot/diy/state/humid",str);
-          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
-          
-//          char s[32];
-//          data = "publish(/buu/iot/diy/state/dht,["+String(humid)+","+String(temp)+"]))";
-//          data.toCharArray(s,data.length()+1);
-//          Serial.println(s);
-
-          
-       }
-       t_dht = millis();
-    }
-
-    if(millis()-t_soil>=time_duration){
-        float moisture_percentage,moisture;
-        moisture = analogRead(SOIL_SENSOR);
-        //moisture_percentage = (100.00 - (moisture * 100.00));
-        moisture_percentage = map(moisture,0,1023,0,100);
-        if (isnan(moisture_percentage)) { //ตรวจสอบค่าที่อ่านได้ว่าเป็น NaN หรือไม่
-//          Serial.println("Failed to read from Moisture sensor!");
-          data = String("/")+String(phone)+String("/")+String(house)+String("/state/error");
-          data.toCharArray(pub_topic,data.length()+1);
-          client.publish(pub_topic,"Failed to read from SOIL!!!");
-//          client.publish("/buu/iot/diy/state/soil/error","Failed to read from SOIL!!!");
-          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print("Failed to read from SOIL!!!)");
-          delay(500);
-        }else{
-          Serial.print("Moisture value:= ");Serial.println(100-moisture_percentage);
-          String data = String(100-moisture_percentage);
-          data.toCharArray(str,data.length()+1);
-          data = String("/")+String(phone)+String("/")+String(house)+String("/state/moisture");
-          data.toCharArray(pub_topic,data.length()+1);
-          client.publish(pub_topic,str);
-//          client.publish("/buu/iot/diy/state/soil",str); //ส่งข้อมูล ความชื้น และ อุณหภูมิ ไปยัง topic ชื่อ /dht
-          Serial.print("publish(");Serial.print(pub_topic);Serial.print(",");Serial.print(str);Serial.println(")");
-//          char s[32];
-//          data = "publish(/buu/iot/diy/state/soil,["+String(100-moisture_percentage)+"]) --> "+String(moisture);
-//          data.toCharArray(s,data.length()+1);
-//          Serial.println(s);
-
-        }
-        t_soil = millis();
-    }
-    delay(100);
 }
